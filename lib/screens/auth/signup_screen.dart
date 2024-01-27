@@ -1,4 +1,9 @@
+import 'package:coffee_shop/bottom_nav_bar.dart';
 import 'package:coffee_shop/constants.dart';
+import 'package:coffee_shop/screens/home_screen.dart';
+import 'package:coffee_shop/widgets/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -17,22 +22,43 @@ class _OTPScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool isVisible = false;
+  bool _isLoading = false;
+
+  final _formKey = GlobalKey<FormState>();
+  final _auth = FirebaseAuth.instance;
+
+  void createAccount() {
+    setState(() {
+      _isLoading = true;
+    });
+    _auth
+        .createUserWithEmailAndPassword(
+            email: _emailController.text, password: _passwordController.text)
+        .then((value) {
+      Utils().toastMessage("Account Created");
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => const BottomNavBarScreen(),
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }).onError((error, stackTrace) {
+      Utils().toastMessage(error.toString());
+      setState(() {
+        _isLoading = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return Scaffold(
         body: Stack(
       children: [
-        // Positioned(
-        //   bottom: -40,
-        //   left: size.width * .04,
-        //   child: SizedBox(
-        //     height: size.height * .3,
-        //     child: Image.asset(
-        //       "assets/images/coffeeSplash.png",
-        //     ),
-        //   ),
-        // ),
         SingleChildScrollView(
           child: Center(
             child: Padding(
@@ -50,7 +76,7 @@ class _OTPScreenState extends State<SignupScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 20),
-                    height: size.height * .6,
+                    height: size.height * .7,
                     width: size.width * .85,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
@@ -67,10 +93,17 @@ class _OTPScreenState extends State<SignupScreen> {
                         ),
                         SizedBox(height: size.height * .04),
                         Form(
+                          key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               TextFormField(
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return 'Enter username';
+                                  }
+                                  return null;
+                                },
                                 decoration: InputDecoration(
                                   hintText: 'Username',
                                   hintStyle: GoogleFonts.sora(fontSize: 13),
@@ -80,6 +113,13 @@ class _OTPScreenState extends State<SignupScreen> {
                               ),
                               SizedBox(height: size.height * .02),
                               TextFormField(
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return 'Enter email';
+                                  }
+                                  return null;
+                                },
                                 decoration: InputDecoration(
                                   hintText: 'Enter email',
                                   hintStyle: GoogleFonts.sora(fontSize: 13),
@@ -89,6 +129,12 @@ class _OTPScreenState extends State<SignupScreen> {
                               ),
                               SizedBox(height: size.height * .02),
                               TextFormField(
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return 'Enter password';
+                                  }
+                                  return null;
+                                },
                                 decoration: InputDecoration(
                                   hintText: 'Password',
                                   focusColor: primaryColor,
@@ -109,16 +155,28 @@ class _OTPScreenState extends State<SignupScreen> {
                                 obscureText: isVisible ? false : true,
                               ),
                               SizedBox(height: size.height * .07),
-                              Container(
-                                height: size.height * .055,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: primaryColor),
-                                child: Center(
-                                  child: Text(
-                                    "Create Account",
-                                    style: GoogleFonts.sora(
-                                        fontSize: 14, color: whiteColor),
+                              GestureDetector(
+                                onTap: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    createAccount();
+                                  }
+                                },
+                                child: Container(
+                                  height: size.height * .055,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: primaryColor),
+                                  child: Center(
+                                    child: _isLoading
+                                        ? const CircularProgressIndicator(
+                                            color: whiteColor,
+                                          )
+                                        : Text(
+                                            "Create Account",
+                                            style: GoogleFonts.sora(
+                                                fontSize: 14,
+                                                color: whiteColor),
+                                          ),
                                   ),
                                 ),
                               ),
