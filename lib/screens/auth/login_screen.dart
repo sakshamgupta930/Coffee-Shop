@@ -2,6 +2,8 @@ import 'package:coffee_shop/bottom_nav_bar.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/screens/auth/forgot_password_screen.dart';
 import 'package:coffee_shop/screens/auth/signup_screen.dart';
+import 'package:coffee_shop/widgets/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,6 +20,37 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool isVisible = false;
+  bool _isLoading = false;
+
+  final _formKey = GlobalKey<FormState>();
+  final _auth = FirebaseAuth.instance;
+
+  void login() {
+    setState(() {
+      _isLoading = true;
+    });
+    _auth
+        .signInWithEmailAndPassword(
+            email: _emailController.text, password: _passwordController.text)
+        .then((value) {
+      setState(() {
+        _isLoading = false;
+      });
+      Utils().toastMessage("Login ${value.user!.email}");
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => const BottomNavBarScreen(),
+        ),
+      );
+    }).onError((error, stackTrace) {
+      Utils().toastMessage(error.toString());
+      setState(() {
+        _isLoading = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -27,21 +60,6 @@ class _LoginScreenState extends State<LoginScreen> {
       width: size.width,
       child: Stack(
         children: [
-          // Column(
-          //   children: [
-          //     ClipRRect(
-          //       borderRadius: const BorderRadius.only(
-          //         bottomLeft: Radius.circular(20),
-          //         bottomRight: Radius.circular(20),
-          //       ),
-          //       child: Image.asset(
-          //         "assets/images/loginCoffee.jpg",
-          //       ),
-          //     ),
-          //     const Spacer(),
-          //     Image.asset("assets/images/coffeeSplash.png"),
-          //   ],
-          // ),
           SingleChildScrollView(
             child: Center(
               child: Padding(
@@ -61,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 20),
-                      height: size.height * .57,
+                      height: size.height * .65,
                       width: size.width * .85,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
@@ -78,10 +96,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           SizedBox(height: size.height * .04),
                           Form(
+                            key: _formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 TextFormField(
+                                  validator: (value) {
+                                    if (value!.isEmpty) {
+                                      return 'Enter email';
+                                    }
+                                    return null;
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Enter email',
                                     hintStyle: GoogleFonts.sora(fontSize: 13),
@@ -91,6 +116,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 SizedBox(height: size.height * .02),
                                 TextFormField(
+                                  validator: (value) {
+                                    if (value!.isEmpty) {
+                                      return 'Enter password';
+                                    }
+                                    return null;
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Password',
                                     focusColor: primaryColor,
@@ -134,13 +165,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 SizedBox(height: size.height * .02),
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      CupertinoPageRoute(
-                                        builder: (context) =>
-                                            const BottomNavBarScreen(),
-                                      ),
-                                    );
+                                    if (_formKey.currentState!.validate()) {
+                                      login();
+                                    }
                                   },
                                   child: Container(
                                     height: size.height * .055,
@@ -148,11 +175,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                         borderRadius: BorderRadius.circular(10),
                                         color: primaryColor),
                                     child: Center(
-                                      child: Text(
-                                        "Login",
-                                        style: GoogleFonts.sora(
-                                            fontSize: 14, color: whiteColor),
-                                      ),
+                                      child: _isLoading
+                                          ? const CircularProgressIndicator(
+                                              color: whiteColor,
+                                            )
+                                          : Text(
+                                              "Login",
+                                              style: GoogleFonts.sora(
+                                                fontSize: 14,
+                                                color: whiteColor,
+                                              ),
+                                            ),
                                     ),
                                   ),
                                 ),

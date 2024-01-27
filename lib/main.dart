@@ -1,5 +1,5 @@
+import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/firebase_options.dart';
-import 'package:coffee_shop/screens/auth/login_screen.dart';
 import 'package:coffee_shop/screens/onboarding_screen.dart';
 import 'package:coffee_shop/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -24,8 +24,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: false,
         primaryColor: Colors.black,
+        colorScheme: ColorScheme.fromSeed(seedColor: primaryColor),
       ),
-      home: const OnBordingScreen(),
+      home: const SplashScreen(),
     );
   }
 }
