@@ -20,163 +20,164 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return Scaffold(
+      backgroundColor: whiteColor,
+      appBar: AppBar(
+        centerTitle: true,
+        elevation: 0,
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: const Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Icon(
+              Icons.arrow_back_ios,
+              color: Colors.black,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        actions: [
+          const Icon(Iconsax.heart, color: Colors.black),
+          SizedBox(width: size.width * .05),
+        ],
+        title: Text(
+          "Coffee Detail",
+          style: GoogleFonts.sora(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: Stack(
         children: [
-          CustomScrollView(
-            slivers: <Widget>[
-              SliverAppBar(
-                leading: const Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Icon(
-                    Icons.arrow_back_ios,
-                    color: whiteColor,
-                  ),
-                ),
-                actions: const [
-                  Padding(
-                    padding: EdgeInsets.only(right: 20),
-                    child: Icon(Iconsax.heart, color: whiteColor),
-                  ),
-                ],
-                backgroundColor: Colors.white,
-                expandedHeight: size.height * .4,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: ClipRRect(
-                    child: Image.network(
-                      coffeeImage,
-                      fit: BoxFit.cover,
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: SizedBox(
+                    height: size.height * .3,
+                    width: double.infinity,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: const Image(
+                        image: NetworkImage(coffeeImage),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, int index) {
-                    return Padding(
-                      padding:
-                          const EdgeInsets.only(left: 20, right: 20, top: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(
-                                    width: size.width * .6,
-                                    child: Text(
-                                      "Espresso Coffee",
-                                      style: GoogleFonts.sora(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "with Chocolate",
-                                    style: GoogleFonts.sora(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  const Icon(Iconsax.star1,
-                                      color: primaryColor, size: 28),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "4.5",
-                                    style: GoogleFonts.sora(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                ],
-                              )
-                            ],
-                          ),
-                          Divider(height: size.height * .05),
-                          Text(
-                            "Description",
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: size.width * .6,
+                          child: Text(
+                            "Espresso Coffee",
                             style: GoogleFonts.sora(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                                fontSize: 20, fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 10),
-                          ReadMoreText(
-                            'A Expresso is am appoximately 150 ml (5oz) bevarage, with 25 ml of espresso coffee and 85ml of fresh milk lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum v lorem ipsum lorem ipsum lorem ipsum lorem ipsum',
-                            trimLines: 3,
-                            trimMode: TrimMode.Line,
-                            trimCollapsedText: 'Read more',
-                            trimExpandedText: ' <-- Show less',
-                            moreStyle: GoogleFonts.sora(
-                                fontSize: 14, fontWeight: FontWeight.bold),
-                            lessStyle: GoogleFonts.sora(
-                                fontSize: 14, fontWeight: FontWeight.bold),
-                            style: GoogleFonts.sora(fontSize: 14),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "with Chocolate",
+                          style: GoogleFonts.sora(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Iconsax.star1,
+                            color: primaryColor, size: 28),
+                        const SizedBox(width: 4),
+                        Text(
+                          "4.5",
+                          style: GoogleFonts.sora(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            "Size",
-                            style: GoogleFonts.sora(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              for (int i = 0; i < sizes.length; i++)
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        selectedSize = sizes[i];
-                                      });
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10),
-                                        decoration: BoxDecoration(
-                                            border: Border.all(
-                                                color: selectedSize == sizes[i]
-                                                    ? primaryColor
-                                                    : Colors.grey),
-                                            color: selectedSize == sizes[i]
-                                                ? primaryColor.withOpacity(0.1)
-                                                : null,
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                        child: Center(
-                                          child: Text(
-                                            sizes[i],
-                                            style: GoogleFonts.sora(
-                                              color: selectedSize == sizes[i]
-                                                  ? primaryColor
-                                                  : Colors.black,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                    )
+                  ],
+                ),
+                Divider(height: size.height * .05),
+                Text(
+                  "Description",
+                  style: GoogleFonts.sora(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ReadMoreText(
+                  'A Expresso is am appoximately 150 ml (5oz) bevarage, with 25 ml of espresso coffee and 85ml of fresh milk lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum v lorem ipsum lorem ipsum lorem ipsum lorem ipsum',
+                  trimLines: 3,
+                  trimMode: TrimMode.Line,
+                  trimCollapsedText: 'Read more',
+                  trimExpandedText: ' <-- Show less',
+                  moreStyle: GoogleFonts.sora(
+                      fontSize: 14, fontWeight: FontWeight.bold),
+                  lessStyle: GoogleFonts.sora(
+                      fontSize: 14, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.sora(fontSize: 14),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  "Size",
+                  style: GoogleFonts.sora(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    for (int i = 0; i < sizes.length; i++)
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedSize = sizes[i];
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: selectedSize == sizes[i]
+                                          ? primaryColor
+                                          : Colors.grey),
+                                  color: selectedSize == sizes[i]
+                                      ? primaryColor.withOpacity(0.1)
+                                      : null,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Center(
+                                child: Text(
+                                  sizes[i],
+                                  style: GoogleFonts.sora(
+                                    color: selectedSize == sizes[i]
+                                        ? primaryColor
+                                        : Colors.black,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                            ],
-                          )
-                        ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                  childCount: 1,
-                ),
-              ),
-            ],
+                  ],
+                )
+              ],
+            ),
           ),
           Align(
             alignment: Alignment.bottomCenter,
