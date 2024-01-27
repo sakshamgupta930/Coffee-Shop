@@ -76,7 +76,7 @@ class _OTPScreenState extends State<SignupScreen> {
                                   hintStyle: GoogleFonts.sora(fontSize: 13),
                                   icon: const Icon(Iconsax.emoji_normal),
                                 ),
-                                controller: _emailController,
+                                controller: _nameController,
                               ),
                               SizedBox(height: size.height * .02),
                               TextFormField(
