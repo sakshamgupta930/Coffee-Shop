@@ -1,6 +1,5 @@
 import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/firebase_options.dart';
-import 'package:coffee_shop/screens/onboarding_screen.dart';
 import 'package:coffee_shop/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -23,8 +22,9 @@ class MyApp extends StatelessWidget {
       title: 'Coffee Shop',
       theme: ThemeData(
         useMaterial3: false,
-        primaryColor: Colors.black,
-        colorScheme: ColorScheme.fromSeed(seedColor: primaryColor),
+        primaryColor: whiteColor,
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: primaryColor, background: whiteColor),
       ),
       home: const SplashScreen(),
     );

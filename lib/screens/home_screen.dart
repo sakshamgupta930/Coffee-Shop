@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final height = MediaQuery.sizeOf(context).height;
     final width = MediaQuery.sizeOf(context).width;
     return Scaffold(
+      backgroundColor: whiteColor,
       body: Stack(
         children: [
           Column(
