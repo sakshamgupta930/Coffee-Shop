@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:coffee_shop/bottom_nav_bar.dart';
 import 'package:coffee_shop/screens/auth/login_screen.dart';
+import 'package:coffee_shop/screens/onboarding_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -29,12 +30,13 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       );
     } else {
+      print("Login");
       Timer(
         const Duration(seconds: 2),
         () => Navigator.pushReplacement(
           context,
           PageTransition(
-            child: const LoginScreen(),
+            child: const OnBordingScreen(),
             type: PageTransitionType.fade,
           ),
         ),

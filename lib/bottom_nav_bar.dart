@@ -1,8 +1,8 @@
 import 'package:coffee_shop/constants.dart';
-import 'package:coffee_shop/screens/cart_screen.dart';
+import 'package:coffee_shop/screens/cart/cart_screen.dart';
 import 'package:coffee_shop/screens/home_screen.dart';
-import 'package:coffee_shop/screens/profile_screen.dart';
-import 'package:coffee_shop/screens/search_screen.dart';
+import 'package:coffee_shop/screens/orders_screen.dart';
+import 'package:coffee_shop/screens/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -19,19 +19,20 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
   int initialIndex = 0;
 
   List<Widget> screens = [
-    HomeScreen(),
-    SearchScreen(),
-    CartScreen(),
-    ProfileScreen(),
+    const HomeScreen(),
+    const OrdersScreen(),
+    const CartScreen(),
+    const ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: whiteColor,
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         child: GNav(
-          activeColor: Colors.white,
+          activeColor: whiteColor,
           tabBackgroundColor: primaryColor,
           padding: const EdgeInsets.all(8),
           onTabChange: (index) {
@@ -47,8 +48,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
               text: "Home",
             ),
             GButton(
-              icon: Iconsax.search_normal,
-              text: "Search",
+              icon: Iconsax.activity,
+              text: "Orders",
             ),
             GButton(
               icon: Iconsax.shopping_bag,

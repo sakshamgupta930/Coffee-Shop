@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/bottom_nav_bar.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/screens/home_screen.dart';
 import 'package:coffee_shop/widgets/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,15 +28,25 @@ class _OTPScreenState extends State<SignupScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
 
   void createAccount() {
     setState(() {
       _isLoading = true;
     });
+    Map<String, dynamic> userDetails = {
+      // 'uid': _auth.currentUser!.uid.toString(),
+      'email': _emailController.text,
+      'name': _nameController.text,
+    };
     _auth
         .createUserWithEmailAndPassword(
             email: _emailController.text, password: _passwordController.text)
         .then((value) {
+      _firestore
+          .collection('users')
+          .doc(_emailController.text)
+          .set(userDetails);
       Utils().toastMessage("Account Created");
       Navigator.push(
         context,
