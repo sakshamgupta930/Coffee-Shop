@@ -49,7 +49,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             ),
             GButton(
               icon: Iconsax.activity,
-              text: "Orders",
+              text: "My Orders",
             ),
             GButton(
               icon: Iconsax.shopping_bag,
