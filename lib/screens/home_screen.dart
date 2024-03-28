@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/screens/coffee_details_screen.dart';
 import 'package:coffee_shop/widgets/category_card.dart';
@@ -150,24 +151,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Expanded(
-                  child: GridView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: width * .1,
-                      mainAxisExtent: height * .34,
-                    ),
-                    itemCount: 6,
-                    itemBuilder: (BuildContext context, int index) {
-                      return GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (context) => const CoffeeDetailsScreen(),
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('CoffeeList')
+                        .snapshots(),
+                    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (snapshot.data!.docs.isEmpty) {
+                        return const Center(
+                            child: Text('No coffee items available.'));
+                      } else {
+                        return GridView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: width * .1,
+                            mainAxisExtent: height * .34,
                           ),
-                        ),
-                        child: const CoffeeCard(),
-                      );
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            var coffee = snapshot.data!.docs[index];
+                            return GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                  builder: (context) =>
+                                      CoffeeDetailsScreen(coffee: coffee),
+                                ),
+                              ),
+                              child: CoffeeCard(coffee: coffee),
+                            );
+                          },
+                        );
+                      }
                     },
                   ),
                 ),
