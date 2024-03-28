@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,7 +6,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:readmore/readmore.dart';
 
 class CoffeeDetailsScreen extends StatefulWidget {
-  const CoffeeDetailsScreen({super.key});
+  final QueryDocumentSnapshot coffee;
+
+  const CoffeeDetailsScreen({Key? key, required this.coffee}) : super(key: key);
 
   @override
   State<CoffeeDetailsScreen> createState() => _CoffeeDetailsScreenState();
@@ -13,12 +16,19 @@ class CoffeeDetailsScreen extends StatefulWidget {
 
 class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
   List<String> sizes = ['S', 'M', 'L'];
+  late Map<String, dynamic> coffee;
 
   String selectedSize = 'M';
 
   @override
+  void initState() {
+    super.initState();
+    coffee = widget.coffee.data() as Map<String, dynamic>;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: whiteColor,
       appBar: AppBar(
@@ -62,8 +72,8 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
                       width: double.infinity,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: const Image(
-                          image: NetworkImage(coffeeImage),
+                        child: Image.network(
+                          coffee['image'],
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -78,14 +88,14 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
                           SizedBox(
                             width: size.width * .6,
                             child: Text(
-                              "Espresso Coffee",
+                              coffee['name'],
                               style: GoogleFonts.sora(
                                   fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "with Chocolate",
+                            coffee['withChocolate'],
                             style: GoogleFonts.sora(fontSize: 12),
                           ),
                         ],
@@ -117,7 +127,7 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
                   ),
                   const SizedBox(height: 10),
                   ReadMoreText(
-                    'A Expresso is am appoximately 150 ml (5oz) bevarage, with 25 ml of espresso coffee and 85ml of fresh milk lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum v lorem ipsum lorem ipsum lorem ipsum lorem ipsum',
+                    coffee['description'],
                     trimLines: 3,
                     trimMode: TrimMode.Line,
                     trimCollapsedText: 'Read more',
@@ -201,7 +211,7 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
                             fontSize: 14, color: Colors.black54),
                       ),
                       Text(
-                        '₹ 249',
+                        '₹ ${coffee['price']}',
                         style: GoogleFonts.sora(
                           fontSize: 20,
                           color: primaryColor,

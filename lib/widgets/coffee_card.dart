@@ -1,20 +1,31 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
 class CoffeeCard extends StatefulWidget {
-  const CoffeeCard({super.key});
+  final QueryDocumentSnapshot coffee;
+
+  const CoffeeCard({Key? key, required this.coffee}) : super(key: key);
 
   @override
   State<CoffeeCard> createState() => _CoffeeCardState();
 }
 
 class _CoffeeCardState extends State<CoffeeCard> {
+  late Map<String, dynamic> coffee;
+
+  @override
+  void initState() {
+    super.initState();
+    coffee = widget.coffee.data() as Map<String, dynamic>;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height;
-    final width = MediaQuery.sizeOf(context).height;
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     return Stack(
       children: [
         Column(
@@ -25,12 +36,14 @@ class _CoffeeCardState extends State<CoffeeCard> {
                 borderRadius: BorderRadius.circular(10),
               ),
               height: height * .18,
-              width: width * .18,
+              width: width,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: const Image(
+                child: Image(
                   fit: BoxFit.cover,
-                  image: NetworkImage(coffeeImage),
+                  image: NetworkImage(
+                    coffee['image'],
+                  ),
                 ),
               ),
             ),
@@ -40,13 +53,13 @@ class _CoffeeCardState extends State<CoffeeCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Cappucino",
+                    coffee['name'],
                     style: GoogleFonts.sora(
                         fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "with Chocolate",
+                    coffee['withChocolate'],
                     style: GoogleFonts.sora(color: greyColor, fontSize: 11),
                   ),
                   const SizedBox(height: 6),
@@ -54,13 +67,13 @@ class _CoffeeCardState extends State<CoffeeCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "₹ 249",
+                        '₹ ${coffee['price']}',
                         style: GoogleFonts.sora(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Container(
                         height: height * .04,
-                        width: width * .04,
+                        width: width * .08,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(6),
                           color: primaryColor,
@@ -80,7 +93,7 @@ class _CoffeeCardState extends State<CoffeeCard> {
           height: 24,
           width: 45,
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(10),
                 bottomRight: Radius.circular(10),
