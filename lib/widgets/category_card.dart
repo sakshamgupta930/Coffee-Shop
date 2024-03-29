@@ -13,17 +13,19 @@ class CategoryCard extends StatefulWidget {
 class _CategoryCardState extends State<CategoryCard> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 20),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: primaryColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          widget.category,
-          style: GoogleFonts.sora(color: whiteColor),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 20),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            widget.category,
+            style: GoogleFonts.sora(color: whiteColor),
+          ),
         ),
       ),
     );
