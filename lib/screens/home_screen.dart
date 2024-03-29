@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: SizedBox(
-                    height: height * .05,
+                    height: height * .04,
                     child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
                       scrollDirection: Axis.horizontal,

@@ -32,17 +32,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         actions: [
+          Center(
+            child: Text(
+              "Admin",
+              style: GoogleFonts.sora(
+                  color: primaryColor, fontWeight: FontWeight.bold),
+            ),
+          ),
           IconButton(
+            color: primaryColor,
             onPressed: () {
               Navigator.push(
                 context,
                 CupertinoPageRoute(
-                  builder: (context) => CoffeeForm(),
+                  builder: (context) => const CoffeeForm(),
                 ),
               );
             },
-            icon: const Icon(Icons.admin_panel_settings_outlined),
-          )
+            icon: const Icon(Icons.cloud_upload),
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Center(
@@ -63,7 +72,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       type: PageTransitionType.fade),
                 );
               },
-              child: const Text("Logout"),
+              child: Text(
+                "Logout",
+                style: GoogleFonts.sora(),
+              ),
             )
           ],
         ),
