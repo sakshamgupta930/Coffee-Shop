@@ -1,5 +1,6 @@
 import 'package:coffee_shop/admin/coffee_form.dart';
 import 'package:coffee_shop/constants.dart';
+import 'package:coffee_shop/local_notification.dart';
 import 'package:coffee_shop/screens/auth/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -74,6 +75,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: Text(
                 "Logout",
+                style: GoogleFonts.sora(),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                localNotification(
+                    "Hi Saksham,", "Order now to get exciting offers");
+              },
+              child: Text(
+                "Local Notification",
                 style: GoogleFonts.sora(),
               ),
             )

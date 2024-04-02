@@ -1,10 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:coffee_shop/bottom_nav_bar.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/screens/coffee_details_screen.dart';
 import 'package:coffee_shop/widgets/category_card.dart';
 import 'package:coffee_shop/widgets/coffee_card.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -16,17 +22,89 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<String> categories = [
-    "Cappuccino",
-    "Macchiato",
-    "Espresso",
-    "Flat white",
-    "Latte",
-    "Caffè mocha",
-    "Americano",
-    "Cold brew",
-    "Cortado",
-  ];
+  Position? _currentPosition;
+  String? _currentAddress;
+
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location services are disabled. Please enable the services')));
+      return false;
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permissions are denied')));
+        return false;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location permissions are permanently denied, we cannot request permissions.')));
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _getCurrentPosition() async {
+    final hasPermission = await _handleLocationPermission();
+
+    if (!hasPermission) return;
+    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) {
+      setState(() => _currentPosition = position);
+      _getAddressFromLatLng(_currentPosition!);
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+
+  Future<void> _getAddressFromLatLng(Position position) async {
+    await placemarkFromCoordinates(
+            _currentPosition!.latitude, _currentPosition!.longitude)
+        .then((List<Placemark> placemarks) {
+      Placemark place = placemarks[0];
+      setState(() {
+        _currentAddress =
+            '${place.name}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
+      });
+
+      print(_currentAddress);
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentPosition();
+    FirebaseAnalytics.instance.logEvent(
+      name: "Home_Screen",
+      parameters: {
+        'User': FirebaseAuth.instance.currentUser!.email,
+      },
+    );
+  }
+  // List<String> categories = [
+  //   "Cappuccino",
+  //   "Macchiato",
+  //   "Espresso",
+  //   "Flat white",
+  //   "Latte",
+  //   "Caffè mocha",
+  //   "Americano",
+  //   "Cold brew",
+  //   "Cortado",
+  // ];
 
   @override
   Widget build(BuildContext context) {
@@ -66,21 +144,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Location",
-                          style:
-                              GoogleFonts.sora(color: whiteColor, fontSize: 12),
-                        ),
                         Row(
                           children: [
                             Text(
-                              "Morar, Gwalior",
+                              "Location",
                               style: GoogleFonts.sora(
                                   color: whiteColor, fontSize: 14),
                             ),
-                            const SizedBox(width: 10),
-                            const Icon(Iconsax.location, color: whiteColor)
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.place_outlined,
+                              color: whiteColor,
+                            )
                           ],
+                        ),
+                        const SizedBox(height: 5),
+                        SizedBox(
+                          width: width * .6,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _currentAddress ?? "Getting Location....",
+                                  style: GoogleFonts.sora(
+                                      color: whiteColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w200),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -97,59 +190,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 SizedBox(height: height * .03),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Container(
-                    padding: const EdgeInsets.only(left: 16, right: 4),
-                    width: width,
-                    height: height * .06,
-                    decoration: BoxDecoration(
-                      color: whiteColor,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black.withOpacity(.4),
-                            spreadRadius: 1,
-                            blurRadius: 4,
-                            blurStyle: BlurStyle.outer),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Iconsax.search_normal),
-                        const SizedBox(width: 10),
-                        Text(
-                          "Search Coffee",
-                          style: GoogleFonts.sora(),
-                        ),
-                        const Spacer(),
-                        Container(
-                          height: height * .05,
-                          width: width * .1,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            color: primaryColor,
-                          ),
-                          child: const Icon(Iconsax.filter, color: whiteColor),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: SizedBox(
-                    height: height * .04,
-                    child: ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        return CategoryCard(category: categories[index]);
-                      },
-                    ),
-                  ),
-                ),
+                const SearchBarHome(),
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(vertical: 16),
+                //   child: SizedBox(
+                //     height: height * .04,
+                //     child: ListView.builder(
+                //       physics: const BouncingScrollPhysics(),
+                //       scrollDirection: Axis.horizontal,
+                //       itemCount: categories.length,
+                //       itemBuilder: (context, index) {
+                //         return CategoryCard(category: categories[index]);
+                //       },
+                //     ),
+                //   ),
+                // ),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
@@ -195,6 +250,57 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class SearchBarHome extends StatelessWidget {
+  const SearchBarHome({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final height = MediaQuery.sizeOf(context).height;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Container(
+        padding: const EdgeInsets.only(left: 16, right: 4),
+        width: width,
+        height: height * .06,
+        decoration: BoxDecoration(
+          color: whiteColor,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(.4),
+                spreadRadius: 1,
+                blurRadius: 4,
+                blurStyle: BlurStyle.outer),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(Iconsax.search_normal),
+            const SizedBox(width: 10),
+            Text(
+              "Search Coffee",
+              style: GoogleFonts.sora(),
+            ),
+            const Spacer(),
+            Container(
+              height: height * .05,
+              width: width * .1,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: primaryColor,
+              ),
+              child: const Icon(Iconsax.filter, color: whiteColor),
+            )
+          ],
+        ),
       ),
     );
   }

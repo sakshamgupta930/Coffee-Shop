@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:coffee_shop/bottom_nav_bar.dart';
 import 'package:coffee_shop/screens/auth/login_screen.dart';
 import 'package:coffee_shop/screens/onboarding_screen.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -47,6 +49,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+    FirebaseAnalytics.instance.logAppOpen();
     isLogin();
   }
 
