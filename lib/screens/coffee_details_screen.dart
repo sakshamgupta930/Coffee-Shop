@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/constants.dart';
+import 'package:coffee_shop/widgets/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:readmore/readmore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CoffeeDetailsScreen extends StatefulWidget {
   final QueryDocumentSnapshot coffee;
@@ -15,8 +18,11 @@ class CoffeeDetailsScreen extends StatefulWidget {
 }
 
 class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance.collection('users');
   List<String> sizes = ['S', 'M', 'L'];
   late Map<String, dynamic> coffee;
+  bool highlightColor = false;
 
   String selectedSize = 'M';
 
@@ -24,6 +30,41 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
   void initState() {
     super.initState();
     coffee = widget.coffee.data() as Map<String, dynamic>;
+  }
+
+  Future<void> addToCart() async {
+    try {
+      String? uid = _auth.currentUser!.email;
+
+      QuerySnapshot cartSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('cart')
+          .where('coffeeName', isEqualTo: coffee['name'])
+          .limit(1)
+          .get();
+
+      if (cartSnapshot.docs.isNotEmpty) {
+        Utils().toastMessage('Coffee is already in cart');
+        return;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('cart')
+          .add({
+        'coffeeName': coffee['name'],
+        'withChocolate': coffee['withChocolate'],
+        'price': coffee['price'].toDouble(),
+        'imageUrl': coffee['image']
+      });
+
+      Utils().toastMessage('Added To Cart');
+    } catch (e) {
+      print('Error adding to cart: $e');
+      Utils().toastMessage('Failed to add to cart');
+    }
   }
 
   @override
@@ -220,19 +261,29 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
                       ),
                     ],
                   ),
-                  Container(
-                    height: size.height * .06,
-                    width: size.width * .45,
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Add To Cart",
-                        style: GoogleFonts.sora(
-                          fontSize: 14,
-                          color: whiteColor,
+                  InkWell(
+                    onTap: addToCart,
+                    onHighlightChanged: (value) {
+                      setState(() {
+                        highlightColor = value;
+                      });
+                    },
+                    child: Container(
+                      height: size.height * .06,
+                      width: size.width * .45,
+                      decoration: BoxDecoration(
+                        color: highlightColor
+                            ? primaryColor.withOpacity(.7)
+                            : primaryColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Add To Cart",
+                          style: GoogleFonts.sora(
+                            fontSize: 14,
+                            color: whiteColor,
+                          ),
                         ),
                       ),
                     ),

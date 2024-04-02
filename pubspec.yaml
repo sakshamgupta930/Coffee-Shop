@@ -31,11 +31,14 @@ dependencies:
   animated_text_kit: ^4.2.2
   cloud_firestore: ^4.14.0
   cupertino_icons: ^1.0.2
+  firebase_analytics: ^10.9.0
   firebase_auth: ^4.16.0
   firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.21
   firebase_storage: ^11.6.0
   flutter:
     sdk: flutter
+  flutter_local_notifications: ^17.0.0
   fluttertoast: ^8.2.4
   geocoding: ^2.1.1
   geolocator: ^10.1.0
@@ -45,6 +48,7 @@ dependencies:
   image_picker: ^1.0.7
   page_transition: ^2.1.0
   readmore: ^2.2.0
+  shared_preferences: ^2.2.2
   simple_animations: ^5.0.2
   uuid: ^4.3.3
 

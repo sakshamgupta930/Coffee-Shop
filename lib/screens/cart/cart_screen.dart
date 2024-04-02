@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/widgets/coffee_cart_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -31,9 +33,9 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return GestureDetector(
-      onVerticalDragDown: (_) {
-        FocusScope.of(context).unfocus();
-      },
+      // onVerticalDragDown: (_) {
+      //   FocusScope.of(context).unfocus();
+      // },
       child: Scaffold(
         backgroundColor: whiteColor,
         appBar: AppBar(
@@ -56,14 +58,30 @@ class _CartScreenState extends State<CartScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: 1,
-                  itemBuilder: (BuildContext context, int index) {
-                    return const CoffeeCartCard();
-                  },
-                ),
+                StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser?.email)
+                        .collection('cart')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        List<DocumentSnapshot> coffeeList = snapshot.data!.docs;
+                        return ListView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: coffeeList.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return CoffeeCartCard(
+                                coffeeData: coffeeList[index]);
+                          },
+                        );
+                      }
+                    }),
                 const Divider(height: 26),
                 GestureDetector(
                   onTap: () {
