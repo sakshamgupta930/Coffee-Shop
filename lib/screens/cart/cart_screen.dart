@@ -14,8 +14,12 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  num price = 0;
+  num totalPrice = 0;
+  num couponDiscount = 0;
   final _addressController = TextEditingController();
-  bool _isLoading = false;
+  final bool _isLoading = false;
   final List<String> coupons = [
     'WELCOME',
     'SAVE10',
@@ -23,12 +27,28 @@ class _CartScreenState extends State<CartScreen> {
     '50OFF',
   ];
   final List<String> couponDetail = [
-    'Save ₹250 with this code',
+    'Save ₹149 with this code',
     'Save ₹10 with this code',
     'Save ₹99 with this code',
     'Save ₹50 with this code',
   ];
+  final List<num> discountList = [149, 10, 99, 50];
   String selectedCoupon = '';
+
+  Future<void> _getAddress() async {
+    DocumentSnapshot addressSnapshot = await _firestore
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .get();
+    _addressController.text = addressSnapshot['address'];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getAddress();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -132,8 +152,43 @@ class _CartScreenState extends State<CartScreen> {
                       style: GoogleFonts.sora(),
                     ),
                     const Spacer(),
+                    StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(FirebaseAuth.instance.currentUser!.email)
+                            .collection('cart')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else {
+                            price = 0;
+                            for (int i = 0;
+                                i < snapshot.data!.docs.length;
+                                i++) {
+                              price += snapshot.data!.docs[i]['price'];
+                            }
+                            return Text(
+                              "₹ $price",
+                              style: GoogleFonts.sora(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          }
+                        }),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
                     Text(
-                      "₹ 249",
+                      "Coupon Discount",
+                      style: GoogleFonts.sora(),
+                    ),
+                    const Spacer(),
+                    Text(
+                      "-  ₹ $couponDiscount",
                       style: GoogleFonts.sora(
                         fontWeight: FontWeight.bold,
                       ),
@@ -149,7 +204,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     const Spacer(),
                     Text(
-                      "₹ 99",
+                      "Free",
                       style: GoogleFonts.sora(
                         fontWeight: FontWeight.bold,
                       ),
@@ -167,7 +222,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     const Spacer(),
                     Text(
-                      "₹ 348",
+                      "₹ ${price - couponDiscount}",
                       style: GoogleFonts.sora(
                         fontWeight: FontWeight.bold,
                       ),
@@ -191,6 +246,12 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   child: TextFormField(
                     controller: _addressController,
+                    onChanged: (value) async {
+                      await _firestore
+                          .collection('users')
+                          .doc(FirebaseAuth.instance.currentUser!.email)
+                          .update({'address': _addressController.text});
+                    },
                     maxLines: null,
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -229,7 +290,7 @@ class _CartScreenState extends State<CartScreen> {
                         color: greyColor.withOpacity(0.1),
                       ),
                       child: Text(
-                        "₹ 348",
+                        "₹ ${price - couponDiscount}",
                         style: GoogleFonts.sora(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -306,6 +367,7 @@ class _CartScreenState extends State<CartScreen> {
                     onTap: () {
                       setState(() {
                         selectedCoupon = coupons[index];
+                        couponDiscount = discountList[index];
                       });
                       Navigator.pop(context);
                     },
