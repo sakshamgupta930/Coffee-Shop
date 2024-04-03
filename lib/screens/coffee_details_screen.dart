@@ -9,7 +9,7 @@ import 'package:readmore/readmore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CoffeeDetailsScreen extends StatefulWidget {
-  final QueryDocumentSnapshot coffee;
+  final Map<String, dynamic> coffee;
 
   const CoffeeDetailsScreen({Key? key, required this.coffee}) : super(key: key);
 
@@ -29,7 +29,7 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    coffee = widget.coffee.data() as Map<String, dynamic>;
+    coffee = widget.coffee;
   }
 
   Future<void> addToCart() async {
@@ -56,8 +56,10 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
           .add({
         'coffeeName': coffee['name'],
         'withChocolate': coffee['withChocolate'],
-        'price': coffee['price'].toDouble(),
-        'imageUrl': coffee['image']
+        'price': coffee['price'][selectedSize].toDouble(),
+        'size': selectedSize,
+        'imageUrl': coffee['image'],
+        'quantity': 1,
       });
 
       Utils().toastMessage('Added To Cart');
@@ -252,7 +254,7 @@ class _CoffeeDetailsScreenState extends State<CoffeeDetailsScreen> {
                             fontSize: 14, color: Colors.black54),
                       ),
                       Text(
-                        '₹ ${coffee['price']}',
+                        '₹ ${coffee['price'][selectedSize]}',
                         style: GoogleFonts.sora(
                           fontSize: 20,
                           color: primaryColor,

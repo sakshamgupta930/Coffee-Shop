@@ -21,9 +21,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+String? _currentAddress;
+
 class _HomeScreenState extends State<HomeScreen> {
   Position? _currentPosition;
-  String? _currentAddress;
 
   Future<bool> _handleLocationPermission() async {
     bool serviceEnabled;
@@ -76,16 +77,29 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentAddress =
             '${place.name}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
       });
-
-      print(_currentAddress);
     }).catchError((e) {
       debugPrint(e);
+    });
+  }
+
+  List<dynamic> coffeeData = [];
+
+  Future<void> _getCoffeeData() async {
+    List<dynamic> coffeeDocs = [];
+    QuerySnapshot querySnapshot =
+        await FirebaseFirestore.instance.collection('CoffeeList').get();
+    if (querySnapshot.docs.isNotEmpty) {
+      querySnapshot.docs.map((e) => coffeeDocs.add(e.data())).toList();
+    }
+    setState(() {
+      coffeeData = coffeeDocs;
     });
   }
 
   @override
   void initState() {
     super.initState();
+    _getCoffeeData();
     _getCurrentPosition();
     FirebaseAnalytics.instance.logEvent(
       name: "Home_Screen",
@@ -206,43 +220,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 //   ),
                 // ),
                 Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('CoffeeList')
-                        .snapshots(),
-                    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (snapshot.data!.docs.isEmpty) {
-                        return const Center(
-                            child: Text('No coffee items available.'));
-                      } else {
-                        return GridView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: width * .1,
-                            mainAxisExtent: height * .34,
+                  child: GridView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: width * .1,
+                      mainAxisExtent: height * .34,
+                    ),
+                    itemCount: coffeeData.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      Map<String, dynamic> coffee = coffeeData[index];
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (context) =>
+                                CoffeeDetailsScreen(coffee: coffee),
                           ),
-                          itemCount: snapshot.data!.docs.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            var coffee = snapshot.data!.docs[index];
-                            return GestureDetector(
-                              onTap: () => Navigator.push(
-                                context,
-                                CupertinoPageRoute(
-                                  builder: (context) =>
-                                      CoffeeDetailsScreen(coffee: coffee),
-                                ),
-                              ),
-                              child: CoffeeCard(coffee: coffee),
-                            );
-                          },
-                        );
-                      }
+                        ),
+                        child: CoffeeCard(coffee: coffee),
+                      );
                     },
                   ),
                 ),

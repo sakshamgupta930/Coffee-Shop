@@ -44,12 +44,23 @@ class CoffeeCartCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                "₹ ${coffeeData['price']}",
-                style: GoogleFonts.sora(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+              Row(
+                children: [
+                  Text(
+                    "${coffeeData['size']} - ",
+                    style: GoogleFonts.sora(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    "₹ ${coffeeData['price']}",
+                    style: GoogleFonts.sora(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(
@@ -66,12 +77,21 @@ class CoffeeCartCard extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () {
-                  FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(FirebaseAuth.instance.currentUser?.email)
-                      .collection('cart')
-                      .doc(coffeeData.id)
-                      .delete();
+                  if (coffeeData['quantity'] <= 1) {
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser?.email)
+                        .collection('cart')
+                        .doc(coffeeData.id)
+                        .delete();
+                  } else {
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser?.email)
+                        .collection('cart')
+                        .doc(coffeeData.id)
+                        .update({'quantity': coffeeData['quantity'] - 1});
+                  }
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -82,10 +102,17 @@ class CoffeeCartCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const Text("1"),
+              Text(coffeeData['quantity'].toString()),
               const SizedBox(width: 10),
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser?.email)
+                      .collection('cart')
+                      .doc(coffeeData.id)
+                      .update({'quantity': coffeeData['quantity'] + 1});
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: greyColor),

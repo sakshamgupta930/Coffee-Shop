@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
 class CoffeeCard extends StatefulWidget {
-  final QueryDocumentSnapshot coffee;
+  final Map<String, dynamic> coffee;
 
   const CoffeeCard({Key? key, required this.coffee}) : super(key: key);
 
@@ -19,7 +19,7 @@ class _CoffeeCardState extends State<CoffeeCard> {
   @override
   void initState() {
     super.initState();
-    coffee = widget.coffee.data() as Map<String, dynamic>;
+    coffee = widget.coffee;
   }
 
   @override
@@ -67,7 +67,7 @@ class _CoffeeCardState extends State<CoffeeCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '₹ ${coffee['price']}',
+                        '₹ ${coffee['price']['S']}',
                         style: GoogleFonts.sora(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
