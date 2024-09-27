@@ -67,7 +67,7 @@ class _CoffeeCardState extends State<CoffeeCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '₹ ${coffee['price']['S']}',
+                        '₹ ${coffee['price']['M']}',
                         style: GoogleFonts.sora(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),

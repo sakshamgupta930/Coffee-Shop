@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/bottom_nav_bar.dart';
 import 'package:coffee_shop/constants.dart';
 import 'package:coffee_shop/screens/coffee_details_screen.dart';
+import 'package:coffee_shop/screens/search_screen.dart';
 import 'package:coffee_shop/widgets/category_card.dart';
 import 'package:coffee_shop/widgets/coffee_card.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -13,6 +14,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:phlox_animations/phlox_animations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -261,42 +263,52 @@ class SearchBarHome extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final height = MediaQuery.sizeOf(context).height;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Container(
-        padding: const EdgeInsets.only(left: 16, right: 4),
-        width: width,
-        height: height * .06,
-        decoration: BoxDecoration(
-          color: whiteColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(.4),
-                spreadRadius: 1,
-                blurRadius: 4,
-                blurStyle: BlurStyle.outer),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Icon(Iconsax.search_normal),
-            const SizedBox(width: 10),
-            Text(
-              "Search Coffee",
-              style: GoogleFonts.sora(),
-            ),
-            const Spacer(),
-            Container(
-              height: height * .05,
-              width: width * .1,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                color: primaryColor,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => SearchScreen(),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Container(
+          padding: const EdgeInsets.only(left: 16, right: 4),
+          width: width,
+          height: height * .06,
+          decoration: BoxDecoration(
+            color: whiteColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(.4),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                  blurStyle: BlurStyle.outer),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Iconsax.search_normal),
+              const SizedBox(width: 10),
+              Text(
+                "Search Coffee",
+                style: GoogleFonts.sora(),
               ),
-              child: const Icon(Iconsax.filter, color: whiteColor),
-            )
-          ],
+              const Spacer(),
+              Container(
+                height: height * .05,
+                width: width * .1,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: primaryColor,
+                ),
+                child: const Icon(Iconsax.filter, color: whiteColor),
+              )
+            ],
+          ),
         ),
       ),
     );

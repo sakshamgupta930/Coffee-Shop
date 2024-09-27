@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee_shop/constants.dart';
+import 'package:coffee_shop/local_notification.dart';
 import 'package:coffee_shop/widgets/coffee_cart_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,9 @@ class _CartScreenState extends State<CartScreen> {
   num totalPrice = 0;
   num couponDiscount = 0;
   final _addressController = TextEditingController();
-  final bool _isLoading = false;
+  final _phoneNumberController = TextEditingController();
+  final _customerNameController = TextEditingController();
+  bool _isLoading = false;
   final List<String> coupons = [
     'WELCOME',
     'SAVE10',
@@ -35,27 +38,174 @@ class _CartScreenState extends State<CartScreen> {
   final List<num> discountList = [149, 10, 99, 50];
   String selectedCoupon = '';
 
-  Future<void> _getAddress() async {
-    DocumentSnapshot addressSnapshot = await _firestore
+  Future<void> _getAddressNumber() async {
+    DocumentSnapshot userSnapshot = await _firestore
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser!.email)
         .get();
-    _addressController.text = addressSnapshot['address'];
+
+    _addressController.text = userSnapshot['address'];
+    _phoneNumberController.text = userSnapshot['phoneNumber'];
+    _customerNameController.text = userSnapshot['name'];
   }
 
   @override
   void initState() {
     super.initState();
-    _getAddress();
+    _getAddressNumber();
+  }
+
+  Future<void> saveAddressNumber() async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .update({
+      'address': _addressController.text,
+      'phoneNumber': _phoneNumberController.text,
+      'name': _customerNameController.text,
+    });
+  }
+
+  Future<void> placeOrder() async {
+    setState(() {
+      _isLoading = true;
+    });
+    if (_addressController.text.isNotEmpty &&
+        _phoneNumberController.text.isNotEmpty &&
+        _customerNameController.text.isNotEmpty) {
+      try {
+        await saveAddressNumber();
+
+        QuerySnapshot cartSnapshot = await _firestore
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.email)
+            .collection('cart')
+            .get();
+
+        if (cartSnapshot.docs.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Your cart is empty!')),
+          );
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+
+        num totalPrice = price - couponDiscount;
+
+        QuerySnapshot orderSnapshot = await FirebaseFirestore.instance
+            .collection('orders')
+            .orderBy('orderDate', descending: true)
+            .limit(1)
+            .get();
+
+        String newOrderId;
+        if (orderSnapshot.docs.isNotEmpty) {
+          String lastOrderId = orderSnapshot.docs.first['orderId'];
+          int lastOrderNumber = int.parse(lastOrderId.split('-')[1]);
+          newOrderId = 'CO-${lastOrderNumber + 1}';
+        } else {
+          newOrderId = 'CO-1';
+        }
+
+        DocumentReference orderRef =
+            await FirebaseFirestore.instance.collection('orders').add({
+          'orderId': newOrderId,
+          "customerEmail": FirebaseAuth.instance.currentUser!.email,
+          'customerName': _customerNameController.text,
+          'customerPhone': _phoneNumberController.text,
+          'customerAddress': _addressController.text,
+          'totalPrice': totalPrice,
+          'items': cartSnapshot.docs.map((doc) => doc.data()).toList(),
+          'coupon': selectedCoupon,
+          'discountApplied': couponDiscount,
+          'orderStatus': 'Pending',
+          'orderDate': FieldValue.serverTimestamp(),
+        });
+
+        for (DocumentSnapshot doc in cartSnapshot.docs) {
+          await doc.reference.delete();
+        }
+
+        _showOrderConfirmationPopup(newOrderId);
+        localNotification("Hi ${_customerNameController.text}",
+            "Your order is confirmed by Order Id - $newOrderId");
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to place order: $e')),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Fill All Details")));
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showOrderConfirmationPopup(String orderId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Order Confirmation'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 60,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Your order has been placed successfully!',
+                style: GoogleFonts.sora(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Order ID: $orderId',
+                style: GoogleFonts.sora(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'OK',
+                style: GoogleFonts.sora(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return GestureDetector(
-      // onVerticalDragDown: (_) {
-      //   FocusScope.of(context).unfocus();
-      // },
       child: Scaffold(
         backgroundColor: whiteColor,
         appBar: AppBar(
@@ -79,29 +229,43 @@ class _CartScreenState extends State<CartScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(FirebaseAuth.instance.currentUser?.email)
-                        .collection('cart')
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        List<DocumentSnapshot> coffeeList = snapshot.data!.docs;
-                        return ListView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: coffeeList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return CoffeeCartCard(
-                                coffeeData: coffeeList[index]);
-                          },
-                        );
-                      }
-                    }),
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser?.email)
+                      .collection('cart')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 30),
+                        child: Text(""),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else if (!snapshot.hasData ||
+                        snapshot.data!.docs.isEmpty) {
+                      return const Center(
+                          child: Padding(
+                        padding: EdgeInsets.only(top: 30),
+                        child: Text(
+                          'Cart is empty',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ));
+                    } else {
+                      // Cart has items
+                      List<DocumentSnapshot> coffeeList = snapshot.data!.docs;
+                      return ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: coffeeList.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return CoffeeCartCard(coffeeData: coffeeList[index]);
+                        },
+                      );
+                    }
+                  },
+                ),
                 const Divider(height: 26),
                 GestureDetector(
                   onTap: () {
@@ -161,7 +325,7 @@ class _CartScreenState extends State<CartScreen> {
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
+                            return Container();
                           } else {
                             price = 0;
                             for (int i = 0;
@@ -231,6 +395,31 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 const Divider(height: 40),
                 Text(
+                  "Phone Number",
+                  style: GoogleFonts.sora(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextFormField(
+                    controller: _phoneNumberController,
+                    maxLines: null,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Enter Phone Number",
+                      hintStyle: GoogleFonts.sora(fontSize: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
                   "Delivery Address",
                   style: GoogleFonts.sora(
                     fontWeight: FontWeight.bold,
@@ -246,13 +435,8 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   child: TextFormField(
                     controller: _addressController,
-                    onChanged: (value) async {
-                      await _firestore
-                          .collection('users')
-                          .doc(FirebaseAuth.instance.currentUser!.email)
-                          .update({'address': _addressController.text});
-                    },
                     maxLines: null,
+                    minLines: 3,
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: "Enter Delivery Address",
@@ -301,7 +485,9 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    placeOrder();
+                  },
                   child: Container(
                     height: size.height * .07,
                     decoration: BoxDecoration(
@@ -365,10 +551,20 @@ class _CartScreenState extends State<CartScreen> {
                         ? primaryColor.withOpacity(0.5)
                         : null,
                     onTap: () {
-                      setState(() {
-                        selectedCoupon = coupons[index];
-                        couponDiscount = discountList[index];
-                      });
+                      couponDiscount = discountList[index];
+                      if (price > couponDiscount) {
+                        setState(() {
+                          couponDiscount = discountList[index];
+                          selectedCoupon = coupons[index];
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                "The cart total is less than the discount value."),
+                          ),
+                        );
+                      }
                       Navigator.pop(context);
                     },
                   );

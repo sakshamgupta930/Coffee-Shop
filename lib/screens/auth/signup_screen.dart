@@ -38,6 +38,9 @@ class _OTPScreenState extends State<SignupScreen> {
       // 'uid': _auth.currentUser!.uid.toString(),
       'email': _emailController.text,
       'name': _nameController.text,
+      'createdAt': DateTime.now(),
+      'address': "",
+      'phoneNumber': "",
     };
     _auth
         .createUserWithEmailAndPassword(
